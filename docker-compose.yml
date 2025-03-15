@@ -1,0 +1,10 @@
+version: "2.4"
+services:
+  bookmanager-postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: bookmanager
+      POSTGRES_PASSWORD: bookmanager
+      POSTGRES_USER: bookmanager

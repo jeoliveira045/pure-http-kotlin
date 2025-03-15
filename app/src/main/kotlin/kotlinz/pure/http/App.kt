@@ -5,8 +5,9 @@ package kotlinz.pure.http
 
 import kotlinz.pure.http.controller.AuthorController
 import kotlinz.pure.http.controller.BookController
-import kotlinz.pure.http.database.AuthorRepository
+import kotlinz.pure.http.database.*
 import kotlinz.pure.http.http.HttpServerConfig
+import kotlinz.pure.http.repositories.RepositoryExecutor
 
 class App {
     val greeting: String
@@ -16,7 +17,7 @@ class App {
 }
 
 fun main() {
-    AuthorRepository.createTable()
+    RepositoryExecutor.execute()
     AuthorController.createContexts(HttpServerConfig.server)
     BookController.createContexts(HttpServerConfig.server)
     HttpServerConfig.createHttpServer(8080)
