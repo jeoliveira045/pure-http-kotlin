@@ -1,8 +1,8 @@
 package kotlinz.pure.http.repositories
 
-import kotlinz.pure.http.database.AuthorBookRepository
-import kotlinz.pure.http.database.AuthorRepository
-import kotlinz.pure.http.database.BookRepository
+import kotlinz.pure.http.repositories.AuthorBookRepository
+import kotlinz.pure.http.repositories.AuthorRepository
+import kotlinz.pure.http.repositories.BookRepository
 
 class RepositoryExecutor{
     companion object {

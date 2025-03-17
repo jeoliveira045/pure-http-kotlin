@@ -49,24 +49,37 @@ class AuthorRepository{
                 SELECT ID, NAME, AGE, LASTNAME FROM AUTHOR WHERE ID = ?;
             """.trimIndent()
             val stmt = connection.prepareStatement(sql)
-            stmt.setInt(1, id as Int)
+            stmt.setLong(1, (id as String).toLong())
 
             stmt.execute()
 
-            val authorList = mutableListOf<Author>()
+            var author: Author? = null
 
             stmt.resultSet.use { rs ->
                 while(rs.next()){
-                    val author = Author(
+                    author = Author(
                         rs.getLong("id"),
                         rs.getString("name"),
                         rs.getInt("age"),
                         rs.getString("lastName")
                     )
-                    authorList.add(author)
                 }
             }
-            return authorList.findLast { it.id == id as Long }!!
+            return author!!
+        }
+
+        fun insert(author: Author): Author {
+            val sql = """
+                INSERT INTO AUTHOR(NAME, AGE, LASTNAME) VALUES (?, ?, ?)
+            """.trimIndent()
+            val stmt = connection.prepareStatement(sql)
+
+            stmt.setString(1, author.name)
+            stmt.setInt(2, author.age)
+            stmt.setString(3, author.lastName)
+            stmt.execute()
+
+            return author
         }
 
         fun update(author: Author): Author {
@@ -74,27 +87,14 @@ class AuthorRepository{
                 UPDATE AUTHOR SET ID = ?, NAME = ?, AGE = ?, LASTNAME = ? WHERE ID = ? 
             """.trimIndent()
             val stmt = connection.prepareStatement(sql)
-            stmt.setInt(1, author.id as Int)
+            stmt.setLong(1, author.id)
             stmt.setString(2, author.name)
             stmt.setInt(3, author.age)
             stmt.setString(4, author.lastName)
-            stmt.setInt(5, author.id as Int)
+            stmt.setLong(5, author.id)
             stmt.execute()
 
-            val authorList = mutableListOf<Author>()
-
-            stmt.resultSet.use { rs ->
-                while(rs.next()){
-                    val author = Author(
-                        rs.getLong("id"),
-                        rs.getString("name"),
-                        rs.getInt("age"),
-                        rs.getString("lastName")
-                    )
-                    authorList.add(author)
-                }
-            }
-            return authorList.findLast { it.id == author.id }!!
+            return author
         }
 
         fun delete(id: Int){
@@ -105,7 +105,6 @@ class AuthorRepository{
             stmt.setInt(1, id)
 
             stmt.execute()
-
         }
 
     }
