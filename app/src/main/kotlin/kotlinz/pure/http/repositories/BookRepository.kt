@@ -1,6 +1,8 @@
 package kotlinz.pure.http.repositories
 
 import kotlinz.pure.http.database.DatabaseConnection
+import labs.example.model.Author
+import labs.example.model.Book
 
 
 class BookRepository{
@@ -18,6 +20,115 @@ class BookRepository{
         """;
 
             stmt.executeUpdate(sql);
+        }
+        fun findAll(): List<Book>{
+            val stmt = connection.createStatement()
+            val sql = """
+                SELECT B.ID as BOOKID, B.NAME as BOOKNAME, B.ISBN, A.ID AS AUTHORID, A.NAME AS AUTHORNAME, A.AGE, A.lastname 
+                FROM BOOK B 
+                INNER JOIN AUTHOR_BOOK ON B.ID = AUTHOR_BOOK.BOOK_ID
+                INNER JOIN AUTHOR A ON A.ID = AUTHOR_BOOK.AUTHOR_ID
+            """.trimIndent()
+
+            stmt.execute(sql)
+
+            val bookList = mutableListOf<Book>()
+
+            stmt.resultSet.use { rs ->
+                while(rs.next()){
+                    val author = Book(
+                        rs.getLong("bookid"),
+                        rs.getString("bookname"),
+                        rs.getString("isbn"),
+                        listOf(Author(
+                            rs.getLong("authorid"),
+                            rs.getString("authorname"),
+                            rs.getInt("age"),
+                            rs.getString("lastName")
+                        ))
+                    )
+                    bookList.add(author)
+                }
+            }
+            val bookGroupBy = bookList.groupBy { it.id }
+
+            bookGroupBy.forEach {(key, value) ->
+                val bookAuthorReduced = value.reduce {acc, book ->
+                    Book(
+                        acc.id,
+                        acc.name,
+                        acc.isbn,
+                        (acc.author + book.author).distinct()
+                    )
+                }
+                bookList.removeAll(value)
+                bookList.add(bookAuthorReduced)
+            }
+
+            return bookList
+        }
+
+        fun findById(id: Any): Author {
+            val sql = """
+                SELECT ID, NAME, AGE, LASTNAME FROM AUTHOR WHERE ID = ?;
+            """.trimIndent()
+            val stmt = connection.prepareStatement(sql)
+            stmt.setLong(1, (id as String).toLong())
+
+            stmt.execute()
+
+            var author: Author? = null
+
+            stmt.resultSet.use { rs ->
+                while(rs.next()){
+                    author = Author(
+                        rs.getLong("id"),
+                        rs.getString("name"),
+                        rs.getInt("age"),
+                        rs.getString("lastName")
+                    )
+                }
+            }
+            return author!!
+        }
+
+        fun insert(author: Author): Author {
+            val sql = """
+                INSERT INTO AUTHOR(NAME, AGE, LASTNAME) VALUES (?, ?, ?)
+            """.trimIndent()
+            val stmt = connection.prepareStatement(sql)
+
+            stmt.setString(1, author.name)
+            stmt.setInt(2, author.age)
+            stmt.setString(3, author.lastName)
+            stmt.execute()
+
+            return author
+        }
+
+        fun update(author: Author): Author {
+            val sql = """
+                UPDATE AUTHOR SET ID = ?, NAME = ?, AGE = ?, LASTNAME = ? WHERE ID = ? 
+            """.trimIndent()
+            val stmt = connection.prepareStatement(sql)
+            stmt.setLong(1, author.id)
+            stmt.setString(2, author.name)
+            stmt.setInt(3, author.age)
+            stmt.setString(4, author.lastName)
+            stmt.setLong(5, author.id)
+            stmt.execute()
+
+            return author
+        }
+
+        fun delete(id: Int){
+            val sql = """
+                DELETE FROM AUTHOR WHERE ID = ?
+            """.trimIndent()
+            val stmt = connection.prepareStatement(sql)
+            stmt.setInt(1, id)
+
+            stmt.execute()
         }
     }
 }

@@ -1,7 +1,9 @@
 package kotlinz.pure.http.controller
 
 import com.sun.net.httpserver.HttpServer
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinz.pure.http.repositories.BookRepository
 import labs.example.model.Book
 
 class BookController {
@@ -20,7 +22,7 @@ class BookController {
                             exchange.sendResponseHeaders(200, response.toByteArray().size.toLong())
                             exchange.responseBody.use { os -> os.write(response.toByteArray()) }
                         } else {
-                            val response = "Retornou todos os livros"
+                            val response = Json.encodeToString<List<Book>>(BookRepository.findAll())
                             exchange.sendResponseHeaders(200, response.toByteArray().size.toLong())
                             exchange.responseBody.use { os -> os.write(response.toByteArray()) }
                         }
