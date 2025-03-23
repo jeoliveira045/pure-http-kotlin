@@ -31,6 +31,7 @@ class BookController {
                         try {
                             val response = exchange.requestBody.bufferedReader().use { it.readText() }.trimIndent()
                             val jsonResponse = Json.decodeFromString<Book>(response)
+                            BookRepository.insert(jsonResponse)
                             exchange.sendResponseHeaders(202, jsonResponse.toString().toByteArray().size.toLong())
                             exchange.responseBody.use { os -> os.write(jsonResponse.toString().toByteArray())}
                         } catch (e: Exception){

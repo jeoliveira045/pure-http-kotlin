@@ -1,6 +1,12 @@
 package kotlinz.pure.http.repositories
 
 import kotlinz.pure.http.database.DatabaseConnection
+import kotlinz.pure.http.validation.ValidatorExecutor
+import kotlinz.pure.http.validation.implementations.AuthorAlreadyExistsValidation
+import kotlinz.pure.http.validation.implementations.AuthorDataDoNotExists
+import kotlinz.pure.http.validation.implementations.BookAlreadyExistsValidation
+import kotlinz.pure.http.validation.implementations.BookDataDoNotExists
+import kotlinz.pure.http.validation.interfaces.Validators
 import labs.example.model.Author
 import labs.example.model.Book
 
@@ -68,42 +74,71 @@ class BookRepository{
             return bookList
         }
 
-        fun findById(id: Any): Author {
+        fun findById(id: Any): Book {
             val sql = """
-                SELECT ID, NAME, AGE, LASTNAME FROM AUTHOR WHERE ID = ?;
+                SELECT B.ID as BOOKID, B.NAME as BOOKNAME, B.ISBN, A.ID AS AUTHORID, A.NAME AS AUTHORNAME, A.AGE, A.lastname 
+                FROM BOOK B 
+                INNER JOIN AUTHOR_BOOK ON B.ID = AUTHOR_BOOK.BOOK_ID
+                INNER JOIN AUTHOR A ON A.ID = AUTHOR_BOOK.AUTHOR_ID
+                WHERE B.ID = ?
             """.trimIndent()
             val stmt = connection.prepareStatement(sql)
             stmt.setLong(1, (id as String).toLong())
-
             stmt.execute()
 
-            var author: Author? = null
+            var book: Book? = null
 
             stmt.resultSet.use { rs ->
+                val bookList = mutableListOf<Book>()
                 while(rs.next()){
-                    author = Author(
-                        rs.getLong("id"),
-                        rs.getString("name"),
-                        rs.getInt("age"),
-                        rs.getString("lastName")
+                    val author = Book(
+                        rs.getLong("bookid"),
+                        rs.getString("bookname"),
+                        rs.getString("isbn"),
+                        listOf(Author(
+                            rs.getLong("authorid"),
+                            rs.getString("authorname"),
+                            rs.getInt("age"),
+                            rs.getString("lastName")
+                        ))
                     )
+                    bookList.add(author)
+                }
+                val bookGroupBy = bookList.groupBy { it.id }
+
+                bookGroupBy.forEach {(key, value) ->
+                    val bookAuthorReduced = value.reduce {acc, book ->
+                        Book(
+                            acc.id,
+                            acc.name,
+                            acc.isbn,
+                            (acc.author + book.author).distinct()
+                        )
+                    }
+                    book = bookAuthorReduced
                 }
             }
-            return author!!
+            return book!!
         }
 
-        fun insert(author: Author): Author {
+        fun insert(book: Book): Book {
+            val bookvalidators = listOf<Validators>(BookAlreadyExistsValidation())
+            val authorValidators = listOf<Validators>(AuthorDataDoNotExists())
+            ValidatorExecutor().exec(bookvalidators, book, connection)
+            book.author.forEach {
+                ValidatorExecutor().exec(authorValidators, it, connection)
+            }
+
             val sql = """
-                INSERT INTO AUTHOR(NAME, AGE, LASTNAME) VALUES (?, ?, ?)
+                INSERT INTO BOOK(NAME, ISBN) VALUES (?, ?)
             """.trimIndent()
             val stmt = connection.prepareStatement(sql)
 
-            stmt.setString(1, author.name)
-            stmt.setInt(2, author.age)
-            stmt.setString(3, author.lastName)
+            stmt.setString(1, book.name)
+            stmt.setString(2, book.isbn)
             stmt.execute()
 
-            return author
+            return book
         }
 
         fun update(author: Author): Author {
@@ -111,11 +146,11 @@ class BookRepository{
                 UPDATE AUTHOR SET ID = ?, NAME = ?, AGE = ?, LASTNAME = ? WHERE ID = ? 
             """.trimIndent()
             val stmt = connection.prepareStatement(sql)
-            stmt.setLong(1, author.id)
+            stmt.setLong(1, author.id!!)
             stmt.setString(2, author.name)
             stmt.setInt(3, author.age)
             stmt.setString(4, author.lastName)
-            stmt.setLong(5, author.id)
+            stmt.setLong(5, author.id!!)
             stmt.execute()
 
             return author
