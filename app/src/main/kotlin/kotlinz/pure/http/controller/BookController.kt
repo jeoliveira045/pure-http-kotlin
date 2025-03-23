@@ -7,6 +7,7 @@ import kotlinz.pure.http.model.response.ErrorResponse
 import kotlinz.pure.http.repositories.BookRepository
 import labs.example.model.Book
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class BookController {
     companion object{
@@ -38,7 +39,7 @@ class BookController {
                             exchange.responseBody.use { os -> os.write(jsonResponse.toString().toByteArray())}
                         } catch (e: Exception){
                             val responseError = ErrorResponse(
-                                LocalDate.now(),
+                                LocalDateTime.now(),
                                 500,
                                 "Internal Server Error",
                                 e.message,

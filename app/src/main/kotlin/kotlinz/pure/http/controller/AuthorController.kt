@@ -8,6 +8,7 @@ import kotlinz.pure.http.model.response.ErrorResponse
 import kotlinz.pure.http.repositories.AuthorRepository
 import labs.example.model.Author
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class AuthorController {
     companion object{
@@ -32,7 +33,7 @@ class AuthorController {
                                 exchange.responseBody.use { os -> os.write(author.toByteArray()) }
                             } catch(e: Exception){
                                 val responseError = ErrorResponse(
-                                    LocalDate.now(),
+                                    LocalDateTime.now(),
                                     500,
                                     "Internal Server Error",
                                     e.message,
@@ -51,7 +52,7 @@ class AuthorController {
                                 exchange.responseBody.use { os -> os.write(authorList.toByteArray()) }
                             } catch(e: Exception){
                                 val responseError = ErrorResponse(
-                                    LocalDate.now(),
+                                    LocalDateTime.now(),
                                     500,
                                     "Internal Server Error",
                                     e.message,
@@ -73,7 +74,7 @@ class AuthorController {
                             exchange.responseBody.use { os -> os.write(response.toByteArray())}
                         } catch(e: Exception){
                             val responseError = ErrorResponse(
-                                LocalDate.now(),
+                                LocalDateTime.now(),
                                 500,
                                 "Internal Server Error",
                                 e.message,
@@ -82,6 +83,7 @@ class AuthorController {
                             val jsonResponseError = Json.encodeToString(responseError)
                             exchange.sendResponseHeaders(500, jsonResponseError.toByteArray().size.toLong())
                             exchange.responseBody.use { os -> os.write(jsonResponseError.toByteArray()) }
+                            e.printStackTrace()
                         }
 
                     }
