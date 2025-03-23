@@ -27,7 +27,7 @@ class BookAlreadyExistsValidation: Validators {
                 )
             }
             if(book.id == selectedBook!!.id){
-                throw Exception("O livro já existe na base")
+                throw RuntimeException("O livro já existe na base")
             }
         }
 

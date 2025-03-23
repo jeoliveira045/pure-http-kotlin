@@ -30,7 +30,7 @@ class AuthorDataDoNotExists: Validators {
         }
 
         if(selectedAuthor == null){
-            throw Exception("Autor não encotrado!")
+            throw RuntimeException("Autor não encotrado!")
         }
     }
 }

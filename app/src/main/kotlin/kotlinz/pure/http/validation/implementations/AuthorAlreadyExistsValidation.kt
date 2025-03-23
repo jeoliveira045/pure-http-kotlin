@@ -30,7 +30,7 @@ class AuthorAlreadyExistsValidation: Validators {
         }
 
         if(author.id == selectedAuthor!!.id){
-            throw Exception("Autor não encotrado!")
+            throw RuntimeException("Autor não encotrado!")
         }
     }
 }
