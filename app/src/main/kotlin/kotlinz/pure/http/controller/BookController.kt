@@ -3,8 +3,10 @@ package kotlinz.pure.http.controller
 import com.sun.net.httpserver.HttpServer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinz.pure.http.model.response.ErrorResponse
 import kotlinz.pure.http.repositories.BookRepository
 import labs.example.model.Book
+import java.time.LocalDate
 
 class BookController {
     companion object{
@@ -35,6 +37,16 @@ class BookController {
                             exchange.sendResponseHeaders(202, jsonResponse.toString().toByteArray().size.toLong())
                             exchange.responseBody.use { os -> os.write(jsonResponse.toString().toByteArray())}
                         } catch (e: Exception){
+                            val responseError = ErrorResponse(
+                                LocalDate.now(),
+                                500,
+                                "Internal Server Error",
+                                e.message,
+                                endpoint
+                            )
+                            val jsonResponseError = Json.encodeToString(responseError)
+                            exchange.sendResponseHeaders(500, jsonResponseError.toByteArray().size.toLong())
+                            exchange.responseBody.use { os -> os.write(jsonResponseError.toByteArray()) }
                             e.printStackTrace()
                         }
 

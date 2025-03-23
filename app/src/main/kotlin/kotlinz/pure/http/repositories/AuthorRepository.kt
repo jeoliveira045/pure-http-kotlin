@@ -87,11 +87,11 @@ class AuthorRepository{
                 UPDATE AUTHOR SET ID = ?, NAME = ?, AGE = ?, LASTNAME = ? WHERE ID = ? 
             """.trimIndent()
             val stmt = connection.prepareStatement(sql)
-            stmt.setLong(1, author.id)
+            stmt.setLong(1, author.id!!)
             stmt.setString(2, author.name)
             stmt.setInt(3, author.age)
             stmt.setString(4, author.lastName)
-            stmt.setLong(5, author.id)
+            stmt.setLong(5, author.id!!)
             stmt.execute()
 
             return author
