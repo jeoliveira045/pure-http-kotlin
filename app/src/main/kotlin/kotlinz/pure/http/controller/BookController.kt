@@ -54,12 +54,17 @@ class BookController {
                     }
                     "PUT" ->  {
                         if(checkPattern(path)) {
-                            val id = path.replace(Regex("/[a-zA-Z]+/"), "")
-                            val requestBody = exchange.requestBody.bufferedReader().use {it.readText()}
-                            println(requestBody)
-                            val response = "O seguinte id foi atualizado: $id"
-                            exchange.sendResponseHeaders(200, response.toByteArray().size.toLong())
-                            exchange.responseBody.use { os -> os.write(response.toByteArray()) }
+                            try {
+                                val id = path.replace(Regex("/[a-zA-Z]+/"), "")
+                                val requestBody = exchange.requestBody.bufferedReader().use {it.readText()}
+                                val bookJson = Json.decodeFromString<Book>(requestBody)
+                                val response = Json.encodeToString(BookRepository.update(bookJson))
+                                exchange.sendResponseHeaders(200, response.toByteArray().size.toLong())
+                                exchange.responseBody.use { os -> os.write(response.toByteArray()) }
+                            } catch(e: Exception){
+                                e.printStackTrace()
+                            }
+
                         }
                     }
                     "DELETE" -> {

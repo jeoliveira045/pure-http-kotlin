@@ -9,25 +9,28 @@ class BookAlreadyExistsValidation: Validators {
     override fun check(objChecked: Any, connection: Connection) {
         val book = objChecked as Book
 
-        var sql = """
-            SELECT ID, NAME, ISBN FROM BOOK WHERE ID = ${book.id}
-        """.trimIndent()
+        if(book.id != null){
 
-        val stmt = connection.prepareStatement(sql)
+            var sql = """
+                SELECT ID, NAME, ISBN FROM BOOK WHERE ID = ${book.id}
+            """.trimIndent()
 
-        stmt.execute()
+            val stmt = connection.prepareStatement(sql)
 
-        stmt.resultSet.use {
-            var selectedBook: Book? = null
-            while(it.next()){
-                selectedBook = Book(
-                    it.getLong("id"),
-                    it.getString("name"),
-                    it.getString("isbn")
-                )
-            }
-            if(book.id == selectedBook!!.id){
-                throw RuntimeException("O livro já existe na base")
+            stmt.execute()
+
+            stmt.resultSet.use {
+                var selectedBook: Book? = null
+                while(it.next()){
+                    selectedBook = Book(
+                        it.getLong("id"),
+                        it.getString("name"),
+                        it.getString("isbn")
+                    )
+                }
+                if(book.id == selectedBook!!.id){
+                    throw RuntimeException("O livro já existe na base")
+                }
             }
         }
 
